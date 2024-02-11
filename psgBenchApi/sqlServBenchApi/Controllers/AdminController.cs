@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using Infrastructure.Enums.Operations;
+using Infrastructure.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -6,6 +8,8 @@ using sqlServBenchApi;
 using sqlServBenchApi.Data;
 using System.Data;
 using System.Diagnostics;
+using sqlServBenchApi.Generators;
+using sqlServBenchApi.Benchmarks.Insert;
 
 namespace psgBenchApi.Controllers
 {
@@ -13,74 +17,73 @@ namespace psgBenchApi.Controllers
     [ApiController]
     public class AdminController : ControllerBase
     {
-        [HttpPost("CreateAdminDapper")]
-        public async Task<IActionResult> CreateAdminDapperBench(int count, Admin admin)
+        private readonly SqlConnection connection;
+        private readonly sqlBenchContext context;
+
+        public AdminController()
         {
-
-            var connection = new SqlConnection("Server=DESKTOP-I51U01F\\SQLEXPRESS;Database=sqlBench;Trusted_Connection=True;TrustServerCertificate=True;");
+            connection = new SqlConnection("Server=DESKTOP-I51U01F\\SQLEXPRESS;Database=sqlBench;Trusted_Connection=True;TrustServerCertificate=True;");
             connection.Open();
-
-
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-
-            for (int i = 0; i < count; i++)
-            {
-                connection.Execute("INSERT INTO admins (name, age) VALUES (@Name, @Age)",admin);
-            }
-
-            stopwatch.Stop();
-
-            connection.Close();
-
-            long elapsedTime = stopwatch.ElapsedMilliseconds;
-            stopwatch.Reset();
-
-            return Ok(elapsedTime);
+            context = new sqlBenchContext();
         }
 
-        [HttpPost("CreateAdminEf")]
-        public async Task<IActionResult> CreateAdminEfBench(int count, Admin admin)
+        [HttpPost("InsertAdminBench")]
+        public async Task<IActionResult> InsertAdminBench(int count, OrmEnum ormEnum, InsertTypesEnum insertTypesEnum)
         {
-            sqlBenchContext db = new sqlBenchContext();
+            var admins = AdminGenerator.GenerateAdmins(count);
+            long result = default;
 
-            Stopwatch stopwatch = new Stopwatch();
-
-
-            var admins = new List<Admin>();
-            for (int i = 0; i < count; i++)
+            switch (insertTypesEnum)
             {
-                admins.Add(new Admin { Name = admin.Name, Age = admin.Age });
+                case InsertTypesEnum.Common:
+                    switch (ormEnum)
+                    {
+                        case OrmEnum.Dapper:
+                            result = InsertAdminsBench.DapperBench(connection, admins);
+                            break;
+                        case OrmEnum.Ef:
+                            result = InsertAdminsBench.EFBench(context, admins);
+                            break;
+                        default:
+                            return BadRequest("Unknown ORM type");
+                    }
+                    break;
+                case InsertTypesEnum.Bulk:
+                    switch (ormEnum)
+                    {
+                        case OrmEnum.Dapper:
+                            result = BulkInsertAdminsBench.DapperBench(connection, admins);
+                            break;
+                        case OrmEnum.Ef:
+                            result = BulkInsertAdminsBench.EFBench(context, admins);
+                            break;
+                        default:
+                            return BadRequest("Unknown ORM type");
+                    }
+                    break;
+                case InsertTypesEnum.TransactionBalk:
+                    switch (ormEnum)
+                    {
+                        case OrmEnum.Dapper:
+                            result = TransactionBulkInsertAdminsBench.DapperBench(connection, admins);
+                            break;
+                        case OrmEnum.Ef:
+                            result = TransactionBulkInsertAdminsBench.EFBench(context, admins);
+                            break;
+                        default:
+                            return BadRequest("Unknown ORM type");
+                    }
+                    break;
+                default:
+                    return BadRequest("Unknown insert type");
             }
-
-            stopwatch.Start();
-
-            db.Admins.AddRange(admins);
-
-            db.SaveChangesAsync();
-
-            stopwatch.Stop();
-
-            long elapsedTime = stopwatch.ElapsedMilliseconds;
-            stopwatch.Reset();
-
-            return Ok(elapsedTime);
+            return Ok(result);
         }
 
         [HttpDelete("ClearTable")]
         public async Task<IActionResult> ClearTable()
         {
-            var connectionString = "Server=DESKTOP-I51U01F\\SQLEXPRESS;Database=sqlBench;Trusted_Connection=True;TrustServerCertificate=True;";
-
-            using (var connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
-
-                connection.Execute("DELETE FROM admins");
-
-                connection.Close();
-            }
-
+            connection.Execute("DELETE FROM admins");
             return Ok();
         }
     }

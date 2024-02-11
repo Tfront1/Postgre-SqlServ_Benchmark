@@ -22,8 +22,8 @@ namespace psgBenchApi.Controllers
             context = new pgBenchContext();
         }
 
-        [HttpPost("InsertAdminDapperBench")]
-        public async Task<IActionResult> InsertAdminDapperBench(int count, OrmEnum ormEnum, InsertTypesEnum insertTypesEnum)
+        [HttpPost("InsertAdminBench")]
+        public async Task<IActionResult> InsertAdminBench(int count, OrmEnum ormEnum, InsertTypesEnum insertTypesEnum)
         {  
 
             var admins = AdminGenerator.GenerateAdmins(count);

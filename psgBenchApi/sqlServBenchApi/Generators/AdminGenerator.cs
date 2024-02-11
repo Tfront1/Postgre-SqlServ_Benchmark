@@ -5,7 +5,7 @@
         private static Random random = new Random();
         private const string alphabet = "abcdefghijklmnopqrstuvwxyz";
 
-        public static List<Admin> GenerateSqlAdmins(int count)
+        public static List<Admin> GenerateAdmins(int count)
         {
             List<Admin> admins = new List<Admin>();
             for (int i = 0; i < count; i++)
