@@ -3,10 +3,13 @@ using Infrastructure.Enums;
 using Infrastructure.Enums.Operations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using psgBenchApi.Benchmarks;
 using psgBenchApi.Benchmarks.Insert;
 using psgBenchApi.Benchmarks.Select;
 using psgBenchApi.Generators;
+using System.Data.Common;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace psgBenchApi.Controllers
@@ -43,110 +46,54 @@ namespace psgBenchApi.Controllers
             var admins = AdminGenerator.GenerateAdmins(count);
             long result = default;
 
-            switch (insertType)
+            IInsertBenchmark insertBenchmark;
+            DbConnection connection;
+            DbContext context;
+
+            //Choose type of insert
+            switch (insertType) 
             {
                 case InsertType.Common:
-                    switch (ormType)
-                    {
-                        case OrmType.Dapper:
-                            switch (dbType)
-                            {
-                                case DbType.Postgre:
-                                    result = InsertAdminsBench.DapperBench(postgreConnection, admins);
-                                    break;
-                                case DbType.SqlServer:
-                                    result = InsertAdminsBench.DapperBench(sqlServConnection, admins);
-                                    break;
-                                default:
-                                    return BadRequest("Unknown db type");
-                            }                        
-                            break;
-                        case OrmType.Ef:
-                            switch (dbType)
-                            {
-                                case DbType.Postgre:
-                                    result = InsertAdminsBench.EFBench(postgreContext, admins);
-                                    break;
-                                case DbType.SqlServer:
-                                    result = InsertAdminsBench.EFBench(sqlServContext, admins);
-                                    break;
-                                default:
-                                    return BadRequest("Unknown db type");
-                            }
-                            break;
-                        default:
-                            return BadRequest("Unknown ORM type");
-                    }
+                    insertBenchmark = new InsertAdminsBench();
                     break;
                 case InsertType.Bulk:
-                    switch (ormType)
-                    {
-                        case OrmType.Dapper:
-                            switch (dbType)
-                            {
-                                case DbType.Postgre:
-                                    result = BulkInsertAdminsBench.DapperBench(postgreConnection, admins);
-                                    break;
-                                case DbType.SqlServer:
-                                    result = BulkInsertAdminsBench.DapperBench(sqlServConnection, admins);
-                                    break;
-                                default:
-                                    return BadRequest("Unknown db type");
-                            }
-                            break;
-                        case OrmType.Ef:
-                            switch (dbType)
-                            {
-                                case DbType.Postgre:
-                                    result = BulkInsertAdminsBench.EFBench(postgreContext, admins);
-                                    break;
-                                case DbType.SqlServer:
-                                    result = BulkInsertAdminsBench.EFBench(sqlServContext, admins);
-                                    break;
-                                default:
-                                    return BadRequest("Unknown db type");
-                            }
-                            break;
-                        default:
-                            return BadRequest("Unknown ORM type");
-                    }
+                    insertBenchmark = new BulkInsertAdminsBench();
                     break;
                 case InsertType.TransactionBalk:
-                    switch (ormType)
-                    {
-                        case OrmType.Dapper:
-                            switch (dbType)
-                            {
-                                case DbType.Postgre:
-                                    result = TransactionBulkInsertAdminsBench.DapperBench(postgreConnection, admins);
-                                    break;
-                                case DbType.SqlServer:
-                                    result = TransactionBulkInsertAdminsBench.DapperBench(sqlServConnection, admins);
-                                    break;
-                                default:
-                                    return BadRequest("Unknown db type");
-                            }
-                            break;
-                        case OrmType.Ef:
-                            switch (dbType)
-                            {
-                                case DbType.Postgre:
-                                    result = TransactionBulkInsertAdminsBench.EFBench(postgreContext, admins);
-                                    break;
-                                case DbType.SqlServer:
-                                    result = TransactionBulkInsertAdminsBench.EFBench(sqlServContext, admins);
-                                    break;
-                                default:
-                                    return BadRequest("Unknown db type");
-                            }
-                            break;
-                        default:
-                            return BadRequest("Unknown ORM type");
-                    }
+                    insertBenchmark = new TransactionBulkInsertAdminsBench();
                     break;
                 default:
                     return BadRequest("Unknown insert type");
             }
+
+            //Choose type of database
+            switch (dbType)
+            {
+                case DbType.Postgre:
+                    connection = postgreConnection;
+                    context = postgreContext;
+                    break;
+                case DbType.SqlServer:
+                    connection = sqlServConnection;
+                    context = sqlServContext;
+                    break;
+                default:
+                    return BadRequest("Unknown db type");
+            }
+
+            //Choose type of orm
+            switch (ormType)
+            {
+                case OrmType.Dapper:
+                    result = insertBenchmark.DapperBench(connection, admins);
+                    break;
+                case OrmType.Ef:
+                    result = insertBenchmark.EFBench(context, admins);
+                    break;
+                default:
+                    return BadRequest("Unknown ORM type");
+            }
+            
             return Ok(result);
         }
 
@@ -159,36 +106,43 @@ namespace psgBenchApi.Controllers
             {
                 return BadRequest("Count must be 0 or more");
             }
+
+            ISelectBenchmark selectBenchmark = new SelectAdminsBench();
+
+            DbConnection connection;
+            DbContext context;
+
+            //Choose type of database
+            switch (dbType)
+            {
+                case DbType.Postgre:
+                    connection = postgreConnection;
+                    context = postgreContext;
+                    break;
+                case DbType.SqlServer:
+                    connection = sqlServConnection;
+                    context = sqlServContext;
+                    break;
+                default:
+                    return BadRequest("Unknown db type");
+            }
+
+            //Choose type of orm
             switch (ormType)
             {
                 case OrmType.Dapper:
-                    switch (dbType)
-                    {
-                        case DbType.Postgre:
-                            result = SelectAdminsBench.DapperBench(postgreConnection, count);
-                            break;
-                        case DbType.SqlServer:
-                            result = SelectAdminsBench.DapperBench(sqlServConnection, count);
-                            break;
-                        default:
-                            return BadRequest("Unknown db type");
-                    }
+                    result = selectBenchmark.DapperBench(connection, count);
                     break;
                 case OrmType.Ef:
-                    switch (dbType)
-                    {
-                        case DbType.Postgre:
-                            result = SelectAdminsBench.EFBench(postgreContext, count);
-                            break;
-                        case DbType.SqlServer:
-                            result = SelectAdminsBench.EFBench(sqlServContext, count);
-                            break;
-                        default:
-                            return BadRequest("Unknown db type");
-                    }
+                    result = selectBenchmark.EFBench(context, count);
                     break;
                 default:
                     return BadRequest("Unknown ORM type");
+            }
+
+            if (result == -1)
+            {
+                return BadRequest("Invalid count of selecting, there are not so many objects");
             }
 
             return Ok(result);

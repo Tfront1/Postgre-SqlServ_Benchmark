@@ -6,9 +6,9 @@ using System.Diagnostics;
 
 namespace psgBenchApi.Benchmarks.Insert
 {
-    public static class BulkInsertAdminsBench
+    public class BulkInsertAdminsBench: IInsertBenchmark
     {
-        public static long DapperBench(DbConnection connection, List<Admin> admins)
+        public long DapperBench(DbConnection connection, List<Admin> admins)
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -22,7 +22,7 @@ namespace psgBenchApi.Benchmarks.Insert
             return elapsedTime;
         }
 
-        public static long EFBench(DbContext context, List<Admin> admins)
+        public long EFBench(DbContext context, List<Admin> admins)
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();

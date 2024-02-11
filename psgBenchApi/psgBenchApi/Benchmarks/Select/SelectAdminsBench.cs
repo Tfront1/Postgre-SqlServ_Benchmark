@@ -7,9 +7,9 @@ using System.Diagnostics;
 
 namespace psgBenchApi.Benchmarks.Select
 {
-    public static class SelectAdminsBench
+    public class SelectAdminsBench: ISelectBenchmark
     {
-        public static long DapperBench(DbConnection connection, int count)
+        public long DapperBench(DbConnection connection, int count)
         {
             Stopwatch stopwatch = new Stopwatch();
             string query = default;
@@ -35,7 +35,7 @@ namespace psgBenchApi.Benchmarks.Select
 
             if (admins.Count < count)
             {
-                return 0;
+                return -1;
             }
 
             long elapsedTime = stopwatch.ElapsedMilliseconds;
@@ -44,7 +44,7 @@ namespace psgBenchApi.Benchmarks.Select
             return elapsedTime;
         }
 
-        public static long EFBench(DbContext context, int count)
+        public long EFBench(DbContext context, int count)
         {
             Stopwatch stopwatch = new Stopwatch();
             List<Admin> admins = default;
@@ -70,7 +70,7 @@ namespace psgBenchApi.Benchmarks.Select
 
             if (admins.Count < count)
             {
-                return 0;
+                return -1;
             }
 
             long elapsedTime = stopwatch.ElapsedMilliseconds;
