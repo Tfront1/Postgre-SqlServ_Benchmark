@@ -2,9 +2,11 @@
 using Infrastructure.Enums;
 using Infrastructure.Enums.Operations;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Npgsql;
 using psgBenchApi.Benchmarks.Insert;
 using psgBenchApi.Generators;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace psgBenchApi.Controllers
 {
@@ -12,59 +14,126 @@ namespace psgBenchApi.Controllers
     [ApiController]
     public class AdminController : ControllerBase
     {
-        private readonly NpgsqlConnection connection;
-        private readonly pgBenchContext context;
+        private readonly NpgsqlConnection postgreConnection;
+        private readonly pgBenchContext postgreContext;
+        private readonly SqlConnection sqlServConnection;
+        private readonly sqlBenchContext sqlServContext;
 
         public AdminController()
         {
-            connection = new NpgsqlConnection("Host=localhost;Port=5432;Database=pgBench;Username=postgres;Password=358145358145Qq");
-            connection.Open();
-            context = new pgBenchContext();
+            postgreConnection = new NpgsqlConnection("Host=localhost;Port=5432;Database=pgBench;Username=postgres;Password=358145358145Qq");
+            postgreConnection.Open();
+
+            sqlServConnection = new SqlConnection("Server=DESKTOP-I51U01F\\SQLEXPRESS;Database=sqlBench;Trusted_Connection=True;TrustServerCertificate=True;");
+            sqlServConnection.Open();
+
+            postgreContext = new pgBenchContext();
+            sqlServContext = new sqlBenchContext();
         }
 
         [HttpPost("InsertAdminBench")]
-        public async Task<IActionResult> InsertAdminBench(int count, OrmEnum ormEnum, InsertTypesEnum insertTypesEnum)
+        public async Task<IActionResult> InsertAdminBench(int count, DbType dbType, OrmType ormType, InsertType insertType)
         {  
 
             var admins = AdminGenerator.GenerateAdmins(count);
             long result = default;
 
-            switch (insertTypesEnum)
+            switch (insertType)
             {
-                case InsertTypesEnum.Common:
-                    switch (ormEnum)
+                case InsertType.Common:
+                    switch (ormType)
                     {
-                        case OrmEnum.Dapper:
-                            result = InsertAdminsBench.DapperBench(connection , admins);
+                        case OrmType.Dapper:
+                            switch (dbType)
+                            {
+                                case DbType.Postgre:
+                                    result = InsertAdminsBench.DapperBench(postgreConnection, admins);
+                                    break;
+                                case DbType.SqlServer:
+                                    result = InsertAdminsBench.DapperBench(sqlServConnection, admins);
+                                    break;
+                                default:
+                                    return BadRequest("Unknown db type");
+                            }                        
                             break;
-                        case OrmEnum.Ef:
-                            result = InsertAdminsBench.EFBench(context, admins);
+                        case OrmType.Ef:
+                            switch (dbType)
+                            {
+                                case DbType.Postgre:
+                                    result = InsertAdminsBench.EFBench(postgreContext, admins);
+                                    break;
+                                case DbType.SqlServer:
+                                    result = InsertAdminsBench.EFBench(sqlServContext, admins);
+                                    break;
+                                default:
+                                    return BadRequest("Unknown db type");
+                            }
                             break;
                         default:
                             return BadRequest("Unknown ORM type");
                     }
                     break;
-                case InsertTypesEnum.Bulk:
-                    switch (ormEnum)
+                case InsertType.Bulk:
+                    switch (ormType)
                     {
-                        case OrmEnum.Dapper:
-                            result = BulkInsertAdminsBench.DapperBench(connection, admins);
+                        case OrmType.Dapper:
+                            switch (dbType)
+                            {
+                                case DbType.Postgre:
+                                    result = BulkInsertAdminsBench.DapperBench(postgreConnection, admins);
+                                    break;
+                                case DbType.SqlServer:
+                                    result = BulkInsertAdminsBench.DapperBench(sqlServConnection, admins);
+                                    break;
+                                default:
+                                    return BadRequest("Unknown db type");
+                            }
                             break;
-                        case OrmEnum.Ef:
-                            result = BulkInsertAdminsBench.EFBench(context, admins);
+                        case OrmType.Ef:
+                            switch (dbType)
+                            {
+                                case DbType.Postgre:
+                                    result = BulkInsertAdminsBench.EFBench(postgreContext, admins);
+                                    break;
+                                case DbType.SqlServer:
+                                    result = BulkInsertAdminsBench.EFBench(sqlServContext, admins);
+                                    break;
+                                default:
+                                    return BadRequest("Unknown db type");
+                            }
                             break;
                         default:
                             return BadRequest("Unknown ORM type");
                     }
                     break;
-                case InsertTypesEnum.TransactionBalk:
-                    switch (ormEnum)
+                case InsertType.TransactionBalk:
+                    switch (ormType)
                     {
-                        case OrmEnum.Dapper:
-                            result = TransactionBulkInsertAdminsBench.DapperBench(connection, admins);
+                        case OrmType.Dapper:
+                            switch (dbType)
+                            {
+                                case DbType.Postgre:
+                                    result = TransactionBulkInsertAdminsBench.DapperBench(postgreConnection, admins);
+                                    break;
+                                case DbType.SqlServer:
+                                    result = TransactionBulkInsertAdminsBench.DapperBench(sqlServConnection, admins);
+                                    break;
+                                default:
+                                    return BadRequest("Unknown db type");
+                            }
                             break;
-                        case OrmEnum.Ef:
-                            result = TransactionBulkInsertAdminsBench.EFBench(context, admins);
+                        case OrmType.Ef:
+                            switch (dbType)
+                            {
+                                case DbType.Postgre:
+                                    result = TransactionBulkInsertAdminsBench.EFBench(postgreContext, admins);
+                                    break;
+                                case DbType.SqlServer:
+                                    result = TransactionBulkInsertAdminsBench.EFBench(sqlServContext, admins);
+                                    break;
+                                default:
+                                    return BadRequest("Unknown db type");
+                            }
                             break;
                         default:
                             return BadRequest("Unknown ORM type");
@@ -77,11 +146,19 @@ namespace psgBenchApi.Controllers
         }
 
         [HttpDelete("ClearTable")]
-        public async Task<IActionResult> ClearTable()
+        public async Task<IActionResult> ClearTable(DbType dbType)
         {
-
-            connection.Execute("DELETE FROM admins");
-
+            switch (dbType)
+            {
+                case DbType.Postgre:
+                    postgreConnection.Execute("DELETE FROM admins");
+                    break;
+                case DbType.SqlServer:
+                    sqlServConnection.Execute("DELETE FROM admins");
+                    break;
+                default:
+                    return BadRequest("Unknown db type");
+            }
             return Ok();
         }
     }

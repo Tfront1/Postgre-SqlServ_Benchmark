@@ -1,12 +1,14 @@
 ﻿using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using System.Data.Common;
 using System.Diagnostics;
 
 namespace psgBenchApi.Benchmarks.Insert
 {
     public static class BulkInsertAdminsBench
     {
-        public static long DapperBench(NpgsqlConnection connection, List<Admin> admins)
+        public static long DapperBench(DbConnection connection, List<Admin> admins)
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
@@ -20,12 +22,12 @@ namespace psgBenchApi.Benchmarks.Insert
             return elapsedTime;
         }
 
-        public static long EFBench(pgBenchContext context, List<Admin> admins)
+        public static long EFBench(DbContext context, List<Admin> admins)
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            context.Admins.AddRange(admins);
+            context.AddRange(admins);
             context.SaveChanges();
 
             stopwatch.Stop();

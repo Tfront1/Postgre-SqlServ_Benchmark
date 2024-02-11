@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Enums.Operations
 {
-    public enum InsertTypesEnum
+    public enum InsertType
     {
         Common = 1,
         Bulk = 2,

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Enums
 {
-    public enum OrmEnum
+    public enum DbType
     {
-        Dapper = 1,
-        Ef = 2,
+        Postgre = 1,
+        SqlServer = 2,
     }
 }
