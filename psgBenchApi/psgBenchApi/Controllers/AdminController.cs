@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Npgsql;
 using psgBenchApi.Benchmarks.Insert;
+using psgBenchApi.Benchmarks.Select;
 using psgBenchApi.Generators;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
@@ -33,7 +34,11 @@ namespace psgBenchApi.Controllers
 
         [HttpPost("InsertAdminBench")]
         public async Task<IActionResult> InsertAdminBench(int count, DbType dbType, OrmType ormType, InsertType insertType)
-        {  
+        {
+            if (count < 0)
+            {
+                return BadRequest("Count must be 0 or more");
+            }
 
             var admins = AdminGenerator.GenerateAdmins(count);
             long result = default;
@@ -142,6 +147,50 @@ namespace psgBenchApi.Controllers
                 default:
                     return BadRequest("Unknown insert type");
             }
+            return Ok(result);
+        }
+
+        [HttpGet("SelectAdminBench")]
+        public async Task<IActionResult> SelectAdminBench(int count, DbType dbType, OrmType ormType)
+        {
+            long result = default;
+
+            if (count < 0)
+            {
+                return BadRequest("Count must be 0 or more");
+            }
+            switch (ormType)
+            {
+                case OrmType.Dapper:
+                    switch (dbType)
+                    {
+                        case DbType.Postgre:
+                            result = SelectAdminsBench.DapperBench(postgreConnection, count);
+                            break;
+                        case DbType.SqlServer:
+                            result = SelectAdminsBench.DapperBench(sqlServConnection, count);
+                            break;
+                        default:
+                            return BadRequest("Unknown db type");
+                    }
+                    break;
+                case OrmType.Ef:
+                    switch (dbType)
+                    {
+                        case DbType.Postgre:
+                            result = SelectAdminsBench.EFBench(postgreContext, count);
+                            break;
+                        case DbType.SqlServer:
+                            result = SelectAdminsBench.EFBench(sqlServContext, count);
+                            break;
+                        default:
+                            return BadRequest("Unknown db type");
+                    }
+                    break;
+                default:
+                    return BadRequest("Unknown ORM type");
+            }
+
             return Ok(result);
         }
 
