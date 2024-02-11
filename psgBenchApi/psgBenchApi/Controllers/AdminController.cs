@@ -1,4 +1,6 @@
 ﻿using Dapper;
+using Infrastructure.Enums;
+using Infrastructure.Enums.Operations;
 using Microsoft.AspNetCore.Mvc;
 using Npgsql;
 using psgBenchApi.Benchmarks.Insert;
@@ -21,68 +23,56 @@ namespace psgBenchApi.Controllers
         }
 
         [HttpPost("InsertAdminDapperBench")]
-        public async Task<IActionResult> InsertAdminDapperBench(int count)
+        public async Task<IActionResult> InsertAdminDapperBench(int count, OrmEnum ormEnum, InsertTypesEnum insertTypesEnum)
         {  
 
             var admins = AdminGenerator.GenerateAdmins(count);
+            long result = default;
 
-            long result = InsertAdminsBench.DapperBench(connection, admins);
-
-            return Ok(result);
-        }
-
-        [HttpPost("InsertAdminEFBench")]
-        public async Task<IActionResult> InsertAdminEFBench(int count)
-        {
-
-            var admins = AdminGenerator.GenerateAdmins(count);
-
-            long result = InsertAdminsBench.EFBench(context, admins);
-
-            return Ok(result);
-        }
-
-        [HttpPost("BulkInsertAdminDapperBench")]
-        public async Task<IActionResult> BulkInsertAdminDapperBench(int count)
-        {
-
-            var admins = AdminGenerator.GenerateAdmins(count);
-
-            long result = BulkInsertAdminsBench.DapperBench(connection, admins);
-
-            return Ok(result);
-        }
-
-        [HttpPost("BulkInsertAdminEFBench")]
-        public async Task<IActionResult> BulkInsertAdminEFBench(int count)
-        {
-
-            var admins = AdminGenerator.GenerateAdmins(count);
-
-            long result = BulkInsertAdminsBench.EFBench(context, admins);
-
-            return Ok(result);
-        }
-
-        [HttpPost("TransactionBulkInsertAdminDapperBench")]
-        public async Task<IActionResult> TransactionBulkInsertAdminDapperBench(int count)
-        {
-
-            var admins = AdminGenerator.GenerateAdmins(count);
-
-            long result = TransactionBulkInsertAdminsBench.DapperBench(connection, admins);
-
-            return Ok(result);
-        }
-
-        [HttpPost("TransactionBulkInsertAdminEFBench")]
-        public async Task<IActionResult> TransactionBulkInsertAdminEFBench(int count)
-        {
-
-            var admins = AdminGenerator.GenerateAdmins(count);
-
-            long result = TransactionBulkInsertAdminsBench.EFBench(context, admins);
-
+            switch (insertTypesEnum)
+            {
+                case InsertTypesEnum.Common:
+                    switch (ormEnum)
+                    {
+                        case OrmEnum.Dapper:
+                            result = InsertAdminsBench.DapperBench(connection , admins);
+                            break;
+                        case OrmEnum.Ef:
+                            result = InsertAdminsBench.EFBench(context, admins);
+                            break;
+                        default:
+                            return BadRequest("Unknown ORM type");
+                    }
+                    break;
+                case InsertTypesEnum.Bulk:
+                    switch (ormEnum)
+                    {
+                        case OrmEnum.Dapper:
+                            result = BulkInsertAdminsBench.DapperBench(connection, admins);
+                            break;
+                        case OrmEnum.Ef:
+                            result = BulkInsertAdminsBench.EFBench(context, admins);
+                            break;
+                        default:
+                            return BadRequest("Unknown ORM type");
+                    }
+                    break;
+                case InsertTypesEnum.TransactionBalk:
+                    switch (ormEnum)
+                    {
+                        case OrmEnum.Dapper:
+                            result = TransactionBulkInsertAdminsBench.DapperBench(connection, admins);
+                            break;
+                        case OrmEnum.Ef:
+                            result = TransactionBulkInsertAdminsBench.EFBench(context, admins);
+                            break;
+                        default:
+                            return BadRequest("Unknown ORM type");
+                    }
+                    break;
+                default:
+                    return BadRequest("Unknown insert type");
+            }
             return Ok(result);
         }
 
