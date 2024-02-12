@@ -9,7 +9,7 @@
     }
   },
   "profiles": {
-    "psgBenchApi": {
+    "psgSqlBenchApi": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

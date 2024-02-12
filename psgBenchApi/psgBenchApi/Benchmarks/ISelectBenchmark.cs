@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Data.Common;
 
-namespace psgBenchApi.Benchmarks
+namespace psgSqlBenchApi.Benchmarks
 {
     public interface ISelectBenchmark
     {

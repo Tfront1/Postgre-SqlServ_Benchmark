@@ -1,12 +1,10 @@
-﻿using BenchmarkDotNet.Attributes;
-using Dapper;
+﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
+using psgSqlBenchApi.Models;
 using System.Data.Common;
 using System.Diagnostics;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace psgBenchApi.Benchmarks.Insert
+namespace psgSqlBenchApi.Benchmarks.Insert
 {
     public class InsertAdminsBench: IInsertBenchmark
     {

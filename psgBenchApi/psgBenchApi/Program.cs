@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace psgBenchApi
+namespace psgSqlBenchApi
 {
     public class Program
     {

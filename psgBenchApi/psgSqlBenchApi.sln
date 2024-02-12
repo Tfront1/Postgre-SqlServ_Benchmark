@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33110.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "psgBenchApi", "psgBenchApi\psgBenchApi.csproj", "{43963602-6D71-4275-8CFB-185795C7FE9D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "psgSqlBenchApi", "psgBenchApi\psgSqlBenchApi.csproj", "{43963602-6D71-4275-8CFB-185795C7FE9D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{5491CEB9-BB7C-4C07-B8EF-599902C5B3C6}"
 EndProject

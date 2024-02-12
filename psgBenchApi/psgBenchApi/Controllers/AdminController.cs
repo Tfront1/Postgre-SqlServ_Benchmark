@@ -5,14 +5,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
-using psgBenchApi.Benchmarks;
-using psgBenchApi.Benchmarks.Insert;
-using psgBenchApi.Benchmarks.Select;
-using psgBenchApi.Generators;
+using psgSqlBenchApi.Benchmarks;
+using psgSqlBenchApi.Benchmarks.Insert;
+using psgSqlBenchApi.Benchmarks.Select;
+using psgSqlBenchApi.Generators;
 using System.Data.Common;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace psgBenchApi.Controllers
+namespace psgSqlBenchApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

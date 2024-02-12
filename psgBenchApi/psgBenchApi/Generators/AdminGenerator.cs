@@ -1,4 +1,6 @@
-﻿namespace psgBenchApi.Generators
+﻿using psgSqlBenchApi.Models;
+
+namespace psgSqlBenchApi.Generators
 {
     public static class AdminGenerator
     {

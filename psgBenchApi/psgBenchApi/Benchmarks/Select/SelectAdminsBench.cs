@@ -2,10 +2,11 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using psgSqlBenchApi.Models;
 using System.Data.Common;
 using System.Diagnostics;
 
-namespace psgBenchApi.Benchmarks.Select
+namespace psgSqlBenchApi.Benchmarks.Select
 {
     public class SelectAdminsBench: ISelectBenchmark
     {

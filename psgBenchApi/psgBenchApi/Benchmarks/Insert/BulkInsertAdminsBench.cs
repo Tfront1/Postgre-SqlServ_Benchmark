@@ -1,10 +1,10 @@
 ﻿using Dapper;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
+using psgSqlBenchApi.Models;
 using System.Data.Common;
 using System.Diagnostics;
 
-namespace psgBenchApi.Benchmarks.Insert
+namespace psgSqlBenchApi.Benchmarks.Insert
 {
     public class BulkInsertAdminsBench: IInsertBenchmark
     {
