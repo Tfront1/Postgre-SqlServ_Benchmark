@@ -27,7 +27,7 @@ namespace psgSqlBenchApi.Controllers
             postgreConnection = new NpgsqlConnection("Host=localhost;Port=5432;Database=pgBench;Username=postgres;Password=358145358145Qq");
             postgreConnection.Open();
 
-            sqlServConnection = new SqlConnection("Server=DESKTOP-I51U01F\\SQLEXPRESS;Database=sqlBench;Trusted_Connection=True;TrustServerCertificate=True;");
+            sqlServConnection = new Microsoft.Data.SqlClient.SqlConnection("Server=DESKTOP-I51U01F\\SQLEXPRESS;Database=sqlBench;Trusted_Connection=True;TrustServerCertificate=True;");
             sqlServConnection.Open();
 
             postgreContext = new pgBenchContext();
@@ -61,6 +61,9 @@ namespace psgSqlBenchApi.Controllers
                 case InsertType.TransactionBalk:
                     insertBenchmark = new TransactionBulkInsertAdminsBench();
                     break;
+                case InsertType.EFOptimisedExtensionBulkInsertBench:
+                    insertBenchmark = new EFOptimisedExtensionBulkInsertBench();
+                    break;
                 default:
                     return BadRequest("Unknown insert type");
             }
@@ -92,7 +95,12 @@ namespace psgSqlBenchApi.Controllers
                 default:
                     return BadRequest("Unknown ORM type");
             }
-            
+
+            if (result < 0)
+            {
+                return BadRequest("Bad request configuration");
+            }
+
             return Ok(result);
         }
 
