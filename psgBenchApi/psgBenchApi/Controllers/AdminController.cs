@@ -61,7 +61,7 @@ namespace psgSqlBenchApi.Controllers
                 case InsertType.TransactionBalk:
                     insertBenchmark = new TransactionBulkInsertAdminsBench();
                     break;
-                case InsertType.EFOptimisedExtensionBulkInsertBench:
+                case InsertType.EFOptimisedExtensionBulkInsert:
                     insertBenchmark = new EFOptimisedExtensionBulkInsertBench();
                     break;
                 default:
