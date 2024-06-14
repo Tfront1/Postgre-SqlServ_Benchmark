@@ -37,11 +37,11 @@ public class BenchmarkController : ControllerBase
     }
 
     [HttpPost("InsertBench")]
-    public async Task<IActionResult> InsertBench(int count, OrmType ormType, InsertType insertType)
+    public async Task<long> InsertBench(int count, OrmType ormType, InsertType insertType)
     {
         if (count < 0)
         {
-            return BadRequest("Count must be 0 or more");
+            return 0;
         }
 
         var users = _userGenerator.GenerateUsers(count);
@@ -65,7 +65,7 @@ public class BenchmarkController : ControllerBase
                 insertBenchmark = new EFOptimisedExtensionBulkInsertBench();
                 break;
             default:
-                return BadRequest("Unknown insert type");
+                return 0;
         }
 
         //Choose type of orm
@@ -78,23 +78,23 @@ public class BenchmarkController : ControllerBase
                 result = insertBenchmark.EFBench(_context, users);
                 break;
             default:
-                return BadRequest("Unknown ORM type");
+                return 0;
         }
 
         if (result < 0)
         {
-            return BadRequest("Bad request configuration");
+            return 0;
         }
 
-        return Ok(result);
+        return result;
     }
 
     [HttpGet("SelectBench")]
-    public async Task<IActionResult> SelectBench(int count, OrmType ormType)
+    public async Task<long> SelectBench(int count, OrmType ormType)
     {
         if (count < 0)
         {
-            return BadRequest("Count must be 0 or more");
+            return 0;
         }
 
         ISelectBenchmark selectBenchmark = new SelectBench();
@@ -110,15 +110,15 @@ public class BenchmarkController : ControllerBase
                 result = selectBenchmark.EFBench(_context, count);
                 break;
             default:
-                return BadRequest("Unknown ORM type");
+                return 0;
         }
 
         if (result == -1)
         {
-            return BadRequest("Invalid count of selecting, there are not so many objects");
+            return 0;
         }
 
-        return Ok(result);
+        return result;
     }
 
     [HttpDelete("ClearTable")]

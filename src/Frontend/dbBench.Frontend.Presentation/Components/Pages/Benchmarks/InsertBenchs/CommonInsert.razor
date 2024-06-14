@@ -1,0 +1,161 @@
+﻿@page "/common-insert"
+@inject IHttpApiClientFactory HttpApiClientFactory
+
+@* Підключення Bootstrap *@
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+
+<style>
+    body {
+        background-color: #343a40;
+        color: #ffffff;
+    }
+
+    .container {
+        background-color: #495057;
+        padding: 20px;
+        border-radius: 5px;
+    }
+
+    .form-control {
+        background-color: #6c757d;
+        color: #ffffff;
+        border: 1px solid #495057;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .form-group-slider {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+        .form-group-slider input[type="range"] {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+    select.form-control {
+        background-color: #6c757d;
+        color: #ffffff;
+        border: 1px solid #495057;
+    }
+
+        select.form-control:focus,
+        select.form-control:active {
+            background-color: #6c757d;
+            color: #ffffff;
+            border-color: #495057;
+        }
+
+        select.form-control option {
+            background-color: #495057;
+            color: #ffffff;
+        }
+</style>
+
+<div class="container mt-4">
+    <h3>Common Insert</h3>
+    <div class="form-group form-group-slider">
+        <label for="repetitions">Repetition count: @repetitions</label>
+        <input id="repetitions" type="range" min="1" max="10" @bind="repetitions" />
+    </div>
+
+    <div class="form-group form-group-slider">
+        <label for="count">Insert count: @count</label>
+        <input id="count" type="range" min="1" max="100000" @bind="count" />
+    </div>
+
+    <div class="form-group">
+        <label for="ormType">ORM Type:</label>
+        <select id="ormType" class="form-control" @bind="ormType">
+            <option value="Dapper">Dapper</option>
+            <option value="Ef">Entity Framework</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="dbType">Database Type:</label>
+        <select id="dbType" class="form-control" @bind="dbType">
+            <option value="Postgres">Postgres</option>
+            <option value="SqlServer">SqlServer</option>
+        </select>
+    </div>
+
+    <button class="btn btn-primary" @onclick="RunBenchmark" disabled="@isRunning">Run Benchmark</button>
+
+    @if (result != null && sumResult != 0)
+    {
+        <div class="alert alert-warning mt-3">
+            Summary result: @sumResult milliseconds
+        </div>
+        <div class="alert alert-info mt-3">
+            Average result: @result.Value milliseconds
+        </div>
+    }
+</div>
+
+@code {
+    private SqlServerClient? sqlServerApiClient;
+    private PostgresClient? postgresApiClient;
+
+    protected override async Task OnInitializedAsync()
+    {
+        sqlServerApiClient = await HttpApiClientFactory.GetSqlServerHttpClientAsync();
+        postgresApiClient = await HttpApiClientFactory.GetPostgresHttpClientAsync();
+    }
+
+    private int repetitions = 1;
+    private int count = 1;
+
+    private Contracts.Operations.InsertType insertType = Contracts.Operations.InsertType.Common;
+
+    private Contracts.OrmType ormType = Contracts.OrmType.Dapper;
+    private Contracts.DbType dbType = Contracts.DbType.Postgres;
+
+    private long? result;
+    private long sumResult = 0;
+    private bool isRunning = false;
+
+    private async Task RunBenchmark()
+    {
+        isRunning = true;
+        sumResult = 0;
+        result = null;
+
+        if (dbType == Contracts.DbType.Postgres)
+        {
+            Postgres.Client.OrmType o = (Postgres.Client.OrmType)Enum.Parse(typeof(Postgres.Client.OrmType), ormType.ToString());
+            Postgres.Client.InsertType i = (Postgres.Client.InsertType)Enum.Parse(typeof(Postgres.Client.InsertType), insertType.ToString());
+            for (int c = 0; c < repetitions; c++)
+            {
+                await postgresApiClient!.ClearTableAsync();
+                sumResult += await postgresApiClient!.InsertBenchAsync(count, o, i);
+            }
+            result = sumResult / repetitions;
+            StateHasChanged();
+        }
+        else if (dbType == Contracts.DbType.SqlServer)
+        {
+            SqlServer.Client.OrmType o = (SqlServer.Client.OrmType)Enum.Parse(typeof(SqlServer.Client.OrmType), ormType.ToString());
+            SqlServer.Client.InsertType i = (SqlServer.Client.InsertType)Enum.Parse(typeof(SqlServer.Client.InsertType), insertType.ToString());
+            for (int c = 0; c < repetitions; c++)
+            {
+                await sqlServerApiClient!.ClearTableAsync();
+                sumResult += await sqlServerApiClient!.InsertBenchAsync(count, o, i);
+            }
+            result = sumResult / repetitions;
+            StateHasChanged();
+        }
+        else
+        {
+            result = null;
+        }
+
+        isRunning = false;
+        StateHasChanged();
+    }
+}
